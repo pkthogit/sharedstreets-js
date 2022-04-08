@@ -31,6 +31,7 @@ function mapOgProperties(og_props:{}, new_props:{}) {
   }
 }
 
+
 export default class Match extends Command {
   static description = 'matches point and line features to sharedstreets refs'
 
@@ -85,7 +86,8 @@ export default class Match extends Command {
     'join-points': flags.boolean({description: 'joins points into segment-snapped line segments -- requires related join-points-match-fields to be defined'}),
     'join-points-match-fields': flags.string({description: 'comma seperated list of fields to match values when joining points', default:''}),
     'join-point-sequence-field': flags.string({description: 'name of field containing point sequence (e.g. 1=start, 2=middle, 3=terminus)', default:'point_sequence'}),
-   
+    'join-points-group-fields': flags.string({description: 'comma seperated list of fields to whose values are joinedin output joined.geojson', default:''}),
+
     'trim-intersections-radius': flags.integer({description: 'buffer and clip radius for intersections in point buffer and point join operations (in meters)', default:0})
   }
 
@@ -96,6 +98,7 @@ export default class Match extends Command {
     const {args, flags} = this.parse(Match)
 
     this.log(chalk.bold.keyword('green')('  🌏  Loading geojson data...'));
+    // this.log(chalk.bold.keyword('green')('  🌏  This is custom message from debug...'));
     var inFile = args.file;
 
     var outFile = flags.out;
@@ -518,6 +521,14 @@ async function matchPoints(outFile, params, points, flags) {
       console.log(chalk.bold.keyword('green')('        merging on fields: ' + mergeFields.join(', ')));
     }
     
+    var carryoverFields:string[] = [];
+    if(flags['join-points-group-fields']) {
+      // split and clean property fields
+      carryoverFields = flags['join-points-group-fields'].split(",").map((f) =>{return f.toLocaleLowerCase().replace(/ /g, "_")});
+      carryoverFields.sort();
+      console.log(chalk.bold.keyword('green')('        carry over fields: ' + carryoverFields.join(', ')));
+    }
+
     for(var matchedPoint of matchedPoints) {
 
       let fieldValues:string[] = [];
@@ -605,7 +616,17 @@ async function matchPoints(outFile, params, points, flags) {
             if(mergedPointSegment.matchedPoints[0].originalFeature.properties.hasOwnProperty(mergeField)){
               outputJoinedFeature.properties['pp_' + mergeField] = mergedPointSegment.matchedPoints[0].originalFeature.properties[mergeField];
             }
-          }               
+          }
+          
+          for (let carryoverField of carryoverFields){
+            if(mergedPointSegment.matchedPoints[0].originalFeature.properties.hasOwnProperty(carryoverField)){
+              let concatanatedValue="";
+              for (let mPoint of mergedPointSegment.matchedPoints){
+                concatanatedValue+=mergedPointSegment.matchedPoints[0].originalFeature.properties[carryoverField]+';'
+              }
+              outputJoinedFeature.properties['pp_' + carryoverField] = concatanatedValue;
+            }
+          }
           
           outputJoinedFeature.properties['shst_joined_point_count'] = mergedPointSegment.matchedPoints.length;
       
@@ -663,7 +684,7 @@ async function matchPoints(outFile, params, points, flags) {
     var unmatchedJsonOut = JSON.stringify(unmatchedFeatureCollection);
     writeFileSync(outFile + ".unmatched.geojson", unmatchedJsonOut);
   }
-
+  console.log(joinedPoints.length )
   if(joinedPoints.length ) {
     console.log(chalk.bold.keyword('blue')('  ✏️  Writing ' + joinedPoints.length + ' joined points: ' + outFile + ".joined.geojson"));
     var joinedPointFeatureCollection:turfHelpers.FeatureCollection<turfHelpers.LineString> = turfHelpers.featureCollection(joinedPoints);
