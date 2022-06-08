@@ -333,7 +333,7 @@ export class TileIndex {
                     for(var j = 0; j <= endNodeIndex;  j++ ){
                         if(previousCoord) {
                             try {
-                                var coordDistance = distance(previousCoord, geometryFeature.geometry.coordinates[j], {units: 'meters'});
+                                var coordDistance = distance(previousCoord, geometryFeature.geometry.coordinates[j] as turfHelpers.Coord, {units: 'meters'});
                                 if(j <= startNodeIndex)
                                     startLocation += coordDistance;
                                 endLocation += coordDistance;

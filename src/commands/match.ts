@@ -492,11 +492,18 @@ async function matchPoints(outFile, params, points, flags) {
             
             outputBufferedFeature.properties['shst_merged_point_count'] = mergedBuffer.matchedPoints.length;
             let mergedBufferLength = 0;
+            let hasAssetIdField = mergedBuffer.matchedPoints[0].originalFeature.properties.hasOwnProperty('assetid')
+            let assetids='';
             for( let point of mergedBuffer.matchedPoints) {
               mergedBufferLength += point.bufferedPoint.section[1] - point.bufferedPoint.section[0];
+              if (hasAssetIdField){
+                assetids+=point.originalFeature.properties['assetid']+';';
+              }
             }
             outputBufferedFeature.properties['shst_merged_buffer_length'] = mergedBufferLength;
-
+            if (hasAssetIdField){
+              outputBufferedFeature.properties['all_assetids'] = assetids;
+            }
             bufferedMergedPoints.push(outputBufferedFeature);
           }
           
@@ -684,7 +691,6 @@ async function matchPoints(outFile, params, points, flags) {
     var unmatchedJsonOut = JSON.stringify(unmatchedFeatureCollection);
     writeFileSync(outFile + ".unmatched.geojson", unmatchedJsonOut);
   }
-  console.log(joinedPoints.length )
   if(joinedPoints.length ) {
     console.log(chalk.bold.keyword('blue')('  ✏️  Writing ' + joinedPoints.length + ' joined points: ' + outFile + ".joined.geojson"));
     var joinedPointFeatureCollection:turfHelpers.FeatureCollection<turfHelpers.LineString> = turfHelpers.featureCollection(joinedPoints);

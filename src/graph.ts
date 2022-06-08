@@ -268,7 +268,8 @@ export class PathSegment {
     isIntersecting(otherSegment:PathSegment):boolean {
         if(this.referenceId === otherSegment.referenceId) {
             if( (otherSegment.section[0] <= this.section[1] && otherSegment.section[0] >= this.section[0]) ||
-                (otherSegment.section[1] <= this.section[1] && otherSegment.section[1] >= this.section[0]))
+                (otherSegment.section[1] <= this.section[1] && otherSegment.section[1] >= this.section[0])||
+                otherSegment.section[0] <= this.section[1] && otherSegment.section[1] >= this.section[0])
                 return true;
         }
         return false;
@@ -1349,12 +1350,13 @@ export class Graph {
           if(pathSegment.isIntersecting(otherSegment)) {
             pathSegment.section[0] = Math.min(pathSegment.section[0], otherSegment.section[0]);
             pathSegment.section[1] = Math.max(pathSegment.section[1], otherSegment.section[1]);
-
-            if(bufferIntersectionRaidus * 2 < pathSegment.referenceLength) {
-                if(pathSegment.section[0] < bufferIntersectionRaidus)
-                    pathSegment.section[0] = bufferIntersectionRaidus;
-                if(pathSegment.referenceLength - pathSegment.section[1] < bufferIntersectionRaidus)
-                    pathSegment.section[1] = pathSegment.referenceLength - bufferIntersectionRaidus;
+            if (bufferIntersectionRaidus>0){
+                if(bufferIntersectionRaidus * 2 < pathSegment.referenceLength) {
+                    if(pathSegment.section[0] < bufferIntersectionRaidus)
+                        pathSegment.section[0] = bufferIntersectionRaidus;
+                    if(pathSegment.referenceLength - pathSegment.section[1] < bufferIntersectionRaidus)
+                        pathSegment.section[1] = pathSegment.referenceLength - bufferIntersectionRaidus;
+                }
             }
 
             pathSegment.referenceLength = pathSegment.section[1] - pathSegment.section[0];
