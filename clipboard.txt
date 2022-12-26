@@ -20,7 +20,7 @@ sudo ./bin/run match ./data/SantaAna/CLI_Test_Input_Maywood.geojson --buffer-poi
 
 sudo ./bin/run match ./data/SanFrancisco/OnStreet_Carshare_Parking.geojson --buffer-points --buffer-points-length=7 --offset-line=10 --buffer-merge --offset-line=5 --search-radius=25
 
-
+ 
 docker run -it -v /home/prem/Documents/github/sharedstreets-js/data/:/data/  --rm  ibihydsmartcity/cli-tool:latest ./bin/run match /data/Maywood/maywood_123.geojson --join-points --join-point-sequence-field=point_relation --join-points-match-fields=activity,reason --join-points-group-fields=sign_id,impath,s3_directory,imkey,detection_id,asset_Type,labeled_impath --offset-line=5 --search-radius=10
 
 
@@ -31,16 +31,3 @@ docker run -it -v /home/prem/Documents/github/sharedstreets-js/data/:/data/  --r
 curl -u admin:geoserver -v -XPOST -H "Content-type: text/xml" -d "<workspace><name>myworkspace</name></workspace>" https://geoservice-stag.ibigroup.in/geoserver/rest/workspaces
 curl -u admin:geoserver -XGET https://geoservice-stag.ibigroup.in/geoserver/rest/layers.xml
 curl -u admin:geoserver -H "Content-type: application/zip" -T ${TRAINING_ROOT}/data/user_data/pointlands.zip http://localhost:8083/geoserver/rest/workspaces/myworkspace/datastores/pointlands/file.shp
-
-
-docker push ibihydsmartcity/cli-tool:latest
-docker build -t ibihydsmartcity/cli-tool:latest .
-
-
-sudo ./bin/run match ./data/Columbus/Adam/AnnArbor_FireHydrantsVerified1.geojson --buffer-points --buffer-points-length=7 --offset-line=10 --buffer-merge --buffer-merge-match-fields=Location --offset-line=5 --search-radius=25
-
-
-
-sudo ./bin/run match ./data/Adam/new-assets-to-buffer.geojson --buffer-points --buffer-points-length-field=Length --offset-line=10 --buffer-merge --buffer-merge-match-fields=Activity,Reason,Rate,maxStay,BLRegDesc,baysCount,Exception --offset-line=5 --search-radius=25
-sudo ./bin/run match ./data/Adam/fire-hydrants-to-buffer-toronto.geojson --buffer-points --buffer-points-length=6 --offset-line=10 --buffer-merge --buffer-merge-match-fields=Activity,Reason, --offset-line=5 --search-radius=25
-sudo ./bin/run match ./data/Adam/new-assets-to-join-toronto.geojson --join-points --join-point-sequence-field=point_relation --join-points-match-fields=Activity,Reason,Rate,maxStay,BLRegDesc,Exception --offset-line=5 --search-radius=10
