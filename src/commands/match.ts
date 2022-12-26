@@ -20,17 +20,17 @@ import lineOffset from '@turf/line-offset';
 
 import { getReferenceLength } from '../tile_index';
 import { generateBinId, getBinCountFromLength, getBinPositionFromLocation, getBinLength } from '../data';
+import { ppid } from 'process';
 
 const chalk = require('chalk');
 const cliProgress = require('cli-progress');
 
 function mapOgProperties(og_props:{}, new_props:{}) {
   for(var prop of Object.keys(og_props)) {
-    new_props['pp_' + prop] = og_props[prop];
+    new_props['ss_' + prop] = og_props[prop];
     //console.log(new_props)
   }
 }
-
 
 export default class Match extends Command {
   static description = 'matches point and line features to sharedstreets refs'
@@ -50,7 +50,7 @@ export default class Match extends Command {
     out: flags.string({char: 'o', description: 'file output name creates files [file-output-name].matched.geojson and [file-output-name].unmatched.geojson'}),
     'tile-source': flags.string({description: 'SharedStreets tile source', default: 'osm/planet-181224'}),
     'tile-hierarchy': flags.integer({description: 'SharedStreets tile hierarchy', default: 6}),
-    'skip-port-properties': flags.boolean({char: 'p', description: 'skip porting existing feature properties preceeded by "pp_"', default: false}),
+    'skip-port-properties': flags.boolean({char: 'p', description: 'skip porting existing feature properties preceeded by "ss_"', default: false}),
     'follow-line-direction': flags.boolean({description: 'only match using line direction', default: false}),
     'best-direction': flags.boolean({description: 'only match one direction based on best score', default: false}),
     'direction-field': flags.string({description: 'name of optional line properity describing segment directionality, use the related "one-way-*-value" and "two-way-value" properties'}),
@@ -288,7 +288,7 @@ async function matchPoints(outFile, params, points, flags) {
       }
 
       for(var property of Object.keys(matchedPoint.originalFeature.properties)) {
-        if(property.startsWith('pp_')) {
+        if(property.startsWith('ss_')) {
           if(!isNaN(matchedPoint.originalFeature.properties[property])) { 
             var sumPropertyName = 'sum_' +  property;
             if(!pointGeom.properties[sumPropertyName]) {
@@ -476,7 +476,7 @@ async function matchPoints(outFile, params, points, flags) {
 
             for(let mergeField of mergeFields) {
               if(mergedBuffer.matchedPoints[0].originalFeature.properties.hasOwnProperty(mergeField)){
-                outputBufferedFeature.properties['pp_' + mergeField] = mergedBuffer.matchedPoints[0].originalFeature.properties[mergeField];
+                outputBufferedFeature.properties['ss_' + mergeField] = mergedBuffer.matchedPoints[0].originalFeature.properties[mergeField];
               }
             }            
 
@@ -487,7 +487,7 @@ async function matchPoints(outFile, params, points, flags) {
                   groupedFieldValues.push(point.originalFeature.properties[groupField]);
                 }
               }
-              outputBufferedFeature.properties['pp_' + groupField] = groupedFieldValues;
+              outputBufferedFeature.properties['ss_' + groupField] = groupedFieldValues;
             } 
             
             outputBufferedFeature.properties['shst_merged_point_count'] = mergedBuffer.matchedPoints.length;
@@ -555,7 +555,7 @@ async function matchPoints(outFile, params, points, flags) {
       preMergedPoints.get(refSideHash).push(matchedPoint);
     
     }
-
+    
     const bufferIntersectionRaidus:number = flags['trim-intersections-radius'];
 
     const mergePoints = async (matchedPoints:MatchedPointType[]):Promise<JoinedPointsType[]> => {
@@ -621,7 +621,7 @@ async function matchPoints(outFile, params, points, flags) {
 
           for(let mergeField of mergeFields) {
             if(mergedPointSegment.matchedPoints[0].originalFeature.properties.hasOwnProperty(mergeField)){
-              outputJoinedFeature.properties['pp_' + mergeField] = mergedPointSegment.matchedPoints[0].originalFeature.properties[mergeField];
+              outputJoinedFeature.properties['ss_' + mergeField] = mergedPointSegment.matchedPoints[0].originalFeature.properties[mergeField];
             }
           }
           
@@ -631,7 +631,7 @@ async function matchPoints(outFile, params, points, flags) {
               for (let mPoint of mergedPointSegment.matchedPoints){
                 concatanatedValue+=mergedPointSegment.matchedPoints[0].originalFeature.properties[carryoverField]+';'
               }
-              outputJoinedFeature.properties['pp_' + carryoverField] = concatanatedValue;
+              outputJoinedFeature.properties['ss_' + carryoverField] = concatanatedValue;
             }
           }
           
@@ -691,12 +691,80 @@ async function matchPoints(outFile, params, points, flags) {
     var unmatchedJsonOut = JSON.stringify(unmatchedFeatureCollection);
     writeFileSync(outFile + ".unmatched.geojson", unmatchedJsonOut);
   }
+  //var myArr =[]
+  if(joinedPoints.length ) {
+    //console.log(joinedPoints)
+ 
+  for(let i = 0;i<joinedPoints.length;i++)
+  {
+      //console.log("1st line printed ",Object.keys(joinedPoints[i].properties))
+
+      Object.keys(joinedPoints[i].properties).forEach(function(key){//taking objects as a keys
+        if(key != "ss_activity" && key != "ss_reason") { //checking property which pp_activity and pp_reason
+          delete joinedPoints[i].properties[key]; //deleting not equal to property
+        }
+      });
+      //console.log(joinedPoints[i].properties); // printing values
+      //myArr.push(joinedPoints[i].properties)
+
+
+      //console.log("mai hu yeh print",joinedPoints[i].properties)
+      //const myArr = JSON.parse(text);
+      //console.log(Object.keys(joinedPoints[i].properties));
+
+
+      //console.log(Object.keys(joinedPoints[i].properties))
+
+      
+      //if(Object.keys(joinedPoints[i].properties) != joinedPoints[i].properties.pp_activity) {
+
+        //console.log("delete property",joinedPoints[i].properties)
+        //delete joinedPoints[i].properties.keys;
+        //console.log("delete property",joinedPoints[i].properties.keys)
+
+        //console.log(`Activity: ${joinedPoints[i].properties.pp_activity} Reason : ${joinedPoints[i].properties.pp_reason}`);
+      //}
+      //console.log(joinedPoints[i].properties.pp_activity)
+
+      //var feature = turf.feature(joinedPoints[i].properties.pp_activity && joinedPoints[i].properties.pp_reason);
+  }
+
+    console.log(chalk.bold.keyword('blue')('  ✏️  Writing ' + joinedPoints.length + ' joined points: ' + outFile + ".joined.geojson"));
+
+    var joinedPointFeatureCollection:turfHelpers.FeatureCollection<turfHelpers.LineString> = turfHelpers.featureCollection(joinedPoints);
+    var joinedPointJson= JSON.stringify(joinedPointFeatureCollection);// printitng the output
+    
+
+    writeFileSync(outFile + ".joined.geojson", joinedPointJson);
+  }/*
+
+  /699
   if(joinedPoints.length ) {
     console.log(chalk.bold.keyword('blue')('  ✏️  Writing ' + joinedPoints.length + ' joined points: ' + outFile + ".joined.geojson"));
+    
     var joinedPointFeatureCollection:turfHelpers.FeatureCollection<turfHelpers.LineString> = turfHelpers.featureCollection(joinedPoints);
-    var joinedPointJson= JSON.stringify(joinedPointFeatureCollection);
+    var joinedPointJson= JSON.stringify(joinedPointFeatureCollection.features.map(getFullName));
+    //console.log(joinedPointFeatureCollection.features)
+
+    console.log(joinedPointFeatureCollection.features.map(getFullName));
+    function getFullName(item) {
+      return {"pp_activity": item.properties.pp_activity,"pp_reason": item.properties.pp_reason};
+    }
     writeFileSync(outFile + ".joined.geojson", joinedPointJson);
   }
+  //new
+    if(joinedPoints.length ) {
+    console.log(chalk.bold.keyword('blue')('  ✏️  Writing ' + joinedPoints.length + ' joined points: ' + outFile + ".joined.geojson"));
+    var joinedPointFeatureCollection:turfHelpers.FeatureCollection<turfHelpers.LineString> = turfHelpers.featureCollection(joinedPoints);
+    //console.log(joinedPointFeatureCollection)
+    var joinedPointJson= JSON.stringify(joinedPointFeatureCollection.features.map(getfields));
+    console.log(joinedPointFeatureCollection.features.map(getfields))
+    function getfields(item.properties){
+      return {"value_activtiy": item.properties.pp_activity, "pp_reason": item.properties.pp_reason};
+    }
+    writeFileSync(outFile + ".joined.geojson", joinedPointJson);
+  }/*
+/712*/
 
   if(cleanPoints.invalid  && cleanPoints.invalid.length > 0 ) {
     console.log(chalk.bold.keyword('blue')('  ✏️  Writing ' + cleanPoints.invalid.length + ' invalid points: ' + outFile + ".invalid.geojson"));

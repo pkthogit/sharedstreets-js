@@ -8,5 +8,5 @@ RUN npm install
 RUN npm build
 RUN chmod +x ./bin/run
 RUN npm run prepack
-# docker build -t ibihydsmartcity/cli-tool:latest // to upload lastest code run this cmd.
+# docker build -t ibihydsmartcity/cli-tool:latest .  // to upload lastest code run this cmd.
 # docker push ibihydsmartcity/cli-tool:latest // to push the updated image
